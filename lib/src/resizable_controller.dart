@@ -151,8 +151,14 @@ class ResizableController with ChangeNotifier {
         ? _getAdjustedReducingDelta(index: index, delta: delta)
         : _getAdjustedIncreasingDelta(index: index, delta: delta);
 
+    final previousSizes = List<double>.from(_sizes);
+
     _sizes[index] += adjustedDelta;
     _sizes[index + 1] -= adjustedDelta;
+
+    if (_sizes.any((s) => s < 16)) {
+      _sizes = previousSizes;
+    }
 
     notifyListeners();
   }

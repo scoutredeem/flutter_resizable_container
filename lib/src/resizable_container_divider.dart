@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
-import 'package:flutter_resizable_container/src/resizable_divider.dart';
 
 class ResizableContainerDivider extends StatefulWidget {
   const ResizableContainerDivider({
@@ -55,7 +54,7 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
             child: AnimatedContainer(
               height: 68,
               duration: const Duration(milliseconds: 200),
-              width: snapped ? 34 : widget.config.thickness,
+              width: snapped ? 34 : 10,
               decoration: BoxDecoration(
                 color: widget.config.color,
                 borderRadius: _getBorderRadius(),

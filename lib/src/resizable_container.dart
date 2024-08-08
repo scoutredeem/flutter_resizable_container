@@ -160,10 +160,10 @@ class _ResizableContainerState extends State<ResizableContainer> {
     }
 
     if (widget.snapPosition == SnapPosition.start) {
-      return anchorPosition - widget.divider.peekSize;
+      return anchorPosition - 4;
     }
 
-    return anchorPosition - widget.divider.peekSize + 2;
+    return anchorPosition - 6;
   }
 
   double _getAvailableSpace(BoxConstraints constraints) {
