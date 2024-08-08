@@ -11,6 +11,7 @@ class ResizableDivider {
     this.onHoverExit,
     this.backgroundColor = Colors.transparent,
     this.peekSize = 16.0,
+    this.snappedBackgroundColor = Colors.transparent,
   })  : assert(height >= thickness, '[size] must be >= [thickness].'),
         assert(thickness > 0, '[thickness] must be > 0.');
 
@@ -53,4 +54,7 @@ class ResizableDivider {
 
   /// The peek size of the child,
   final double peekSize;
+
+  /// Snapped background color
+  final Color snappedBackgroundColor;
 }

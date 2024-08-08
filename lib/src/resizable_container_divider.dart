@@ -10,6 +10,7 @@ class ResizableContainerDivider extends StatefulWidget {
     required this.config,
     required this.snappedChild,
     required this.snapPosition,
+    required this.onTap,
   });
 
   final Axis direction;
@@ -17,6 +18,7 @@ class ResizableContainerDivider extends StatefulWidget {
   final ResizableDivider config;
   final Widget snappedChild;
   final SnapPosition? snapPosition;
+  final VoidCallback? onTap;
 
   @override
   State<ResizableContainerDivider> createState() =>
@@ -45,18 +47,20 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
         onHorizontalDragStart: _onHorizontalDragStart,
         onHorizontalDragUpdate: _onHorizontalDragUpdate,
         onHorizontalDragEnd: _onHorizontalDragEnd,
+        onTap: widget.onTap,
         child: Container(
           height: height,
           width: snapped ? 34 : width,
           color: widget.config.backgroundColor,
-          // color: Colors.green,
           child: Center(
             child: AnimatedContainer(
               height: 68,
               duration: const Duration(milliseconds: 200),
               width: snapped ? 34 : 10,
               decoration: BoxDecoration(
-                color: widget.config.color,
+                color: snapped
+                    ? widget.config.snappedBackgroundColor
+                    : widget.config.color,
                 borderRadius: _getBorderRadius(),
                 boxShadow: [
                   BoxShadow(

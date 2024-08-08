@@ -22,6 +22,7 @@ class ResizableContainer extends StatefulWidget {
     required this.snappedDivider,
     this.snapPosition,
     this.controller,
+    this.onTap,
   });
 
   /// A list of resizable [ResizableChild] containing the child [Widget]s and
@@ -42,6 +43,8 @@ class ResizableContainer extends StatefulWidget {
 
   /// Indicates which direction the children is snapped
   final SnapPosition? snapPosition;
+
+  final VoidCallback? onTap;
 
   @override
   State<ResizableContainer> createState() => _ResizableContainerState();
@@ -142,6 +145,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
                     ),
                     snappedChild: widget.snappedDivider,
                     snapPosition: widget.snapPosition,
+                    onTap: widget.onTap,
                   ),
                 ),
               ],
