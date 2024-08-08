@@ -18,9 +18,11 @@ class ResizableContainer extends StatefulWidget {
     super.key,
     required this.children,
     required this.direction,
+    required this.divider,
+    required this.snappedDivider,
+    this.snapPosition,
     this.controller,
-    ResizableDivider? divider,
-  }) : divider = divider ?? const ResizableDivider();
+  });
 
   /// A list of resizable [ResizableChild] containing the child [Widget]s and
   /// their sizing configuration.
@@ -34,6 +36,12 @@ class ResizableContainer extends StatefulWidget {
 
   /// Configuration values for the dividing space/line between this container's [children].
   final ResizableDivider divider;
+
+  /// Child used for divider when the children size is snapped
+  final Widget snappedDivider;
+
+  /// Indicates which direction the children is snapped
+  final SnapPosition? snapPosition;
 
   @override
   State<ResizableContainer> createState() => _ResizableContainerState();
@@ -81,44 +89,61 @@ class _ResizableContainerState extends State<ResizableContainer> {
         return AnimatedBuilder(
           animation: controller,
           builder: (context, _) {
-            return Flex(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              direction: widget.direction,
+            return Stack(
+              fit: StackFit.expand,
               children: [
-                for (var i = 0; i < widget.children.length; i++) ...[
-                  // build the child
-                  Builder(
-                    builder: (context) {
-                      final height = _getChildSize(
-                        index: i,
-                        direction: Axis.vertical,
-                        constraints: constraints,
-                      );
+                Flex(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  direction: widget.direction,
+                  children: [
+                    for (var i = 0; i < widget.children.length; i++) ...[
+                      // build the child
+                      Builder(
+                        builder: (context) {
+                          final isFirst = i == 0;
+                          final isLast = i == widget.children.length - 1;
+                          final height = _getChildSize(
+                            index: i,
+                            direction: Axis.vertical,
+                            constraints: constraints,
+                          );
 
-                      final width = _getChildSize(
-                        index: i,
-                        direction: Axis.horizontal,
-                        constraints: constraints,
-                      );
+                          final width = _getChildSize(
+                            index: i,
+                            direction: Axis.horizontal,
+                            constraints: constraints,
+                          );
 
-                      return SizedBox(
-                        height: height,
-                        width: width,
-                        child: widget.children[i].child,
-                      );
-                    },
-                  ),
-                  if (i < widget.children.length - 1) ...[
-                    ResizableContainerDivider(
-                      config: widget.divider,
-                      direction: widget.direction,
-                      onResizeUpdate: (delta) => manager.adjustChildSize(
-                        index: i,
-                        delta: delta,
+                          return Container(
+                            padding: EdgeInsets.only(
+                              left: isFirst ? 0 : 2,
+                              right: isLast ? 0 : 2,
+                            ),
+                            height: height,
+                            width: width,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: widget.children[i].child,
+                            ),
+                          );
+                        },
                       ),
-                    ),
+                    ],
                   ],
-                ],
+                ),
+                Positioned(
+                  left: _getDividerPosition(),
+                  child: ResizableContainerDivider(
+                    config: widget.divider,
+                    direction: widget.direction,
+                    onResizeUpdate: (delta) => manager.adjustChildSize(
+                      index: 0,
+                      delta: delta,
+                    ),
+                    snappedChild: widget.snappedDivider,
+                    snapPosition: widget.snapPosition,
+                  ),
+                ),
               ],
             );
           },
@@ -127,10 +152,23 @@ class _ResizableContainerState extends State<ResizableContainer> {
     );
   }
 
+  double? _getDividerPosition() {
+    final anchorPosition =
+        controller.sizes.first - (widget.divider.thickness / 2);
+    if (widget.snapPosition == null) {
+      return anchorPosition;
+    }
+
+    if (widget.snapPosition == SnapPosition.start) {
+      return anchorPosition - widget.divider.peekSize;
+    }
+
+    return anchorPosition - widget.divider.peekSize + 2;
+  }
+
   double _getAvailableSpace(BoxConstraints constraints) {
     final totalSpace = constraints.maxForDirection(widget.direction);
-    final dividerSpace = (widget.children.length - 1) * widget.divider.size;
-    return totalSpace - dividerSpace;
+    return totalSpace;
   }
 
   double _getChildSize({

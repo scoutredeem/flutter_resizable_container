@@ -3,13 +3,15 @@ import 'package:flutter/material.dart';
 class ResizableDivider {
   const ResizableDivider({
     this.thickness = 1.0,
-    this.size = 2.0,
+    this.height = 2.0,
     this.color,
     this.indent,
     this.endIndent,
     this.onHoverEnter,
     this.onHoverExit,
-  })  : assert(size >= thickness, '[size] must be >= [thickness].'),
+    this.backgroundColor = Colors.transparent,
+    this.peekSize = 16.0,
+  })  : assert(height >= thickness, '[size] must be >= [thickness].'),
         assert(thickness > 0, '[thickness] must be > 0.');
 
   /// The thickness of the line drawn within the divider.
@@ -21,7 +23,7 @@ class ResizableDivider {
   /// The divider line will be drawn in the center of this space.
   ///
   /// Defaults to 2.0.
-  final double size;
+  final double height;
 
   /// The color of the dividers between children.
   ///
@@ -45,4 +47,10 @@ class ResizableDivider {
 
   /// Triggers when the user's cursor ends hovering over this divider.
   final VoidCallback? onHoverExit;
+
+  /// Background color for the divider.
+  final Color backgroundColor;
+
+  /// The peek size of the child,
+  final double peekSize;
 }

@@ -1,3 +1,4 @@
+import "dart:async";
 import "dart:collection";
 import "dart:math";
 
@@ -5,6 +6,8 @@ import 'package:flutter/material.dart';
 import "package:flutter_resizable_container/flutter_resizable_container.dart";
 import "package:flutter_resizable_container/src/extensions/iterable_ext.dart";
 import "package:flutter_resizable_container/src/resizable_size.dart";
+
+enum SnapPosition { start, end }
 
 /// A controller to provide a programmatic interface to a [ResizableContainer].
 class ResizableController with ChangeNotifier {
@@ -66,6 +69,10 @@ class ResizableController with ChangeNotifier {
   /// * The total amount of pixels is greater than the total available space
   /// * The sum of all ratio values exceeds 1.0
   void setSizes(List<ResizableSize> values) {
+    if (animating) {
+      return;
+    }
+
     if (values.length != _children.length) {
       throw ArgumentError('Must contain a value for every child');
     }
@@ -78,16 +85,75 @@ class ResizableController with ChangeNotifier {
     notifyListeners();
   }
 
+  bool animating = false;
+  void animateSizes(
+    List<ResizableSize> values, {
+    Duration duration = const Duration(milliseconds: 300),
+    required bool snap,
+  }) {
+    if (animating) {
+      return;
+    }
+
+    if (values.length != _children.length) {
+      throw ArgumentError('Must contain a value for every child');
+    }
+
+    final newSizes = _mapSizesToAvailableSpace(
+      resizableSizes: values,
+      availableSpace: _availableSpace,
+    );
+
+    if (duration == Duration.zero) {
+      _sizes = newSizes;
+      notifyListeners();
+    } else {
+      animating = true;
+      const int steps = 60; // Aiming for 60 FPS
+      final interval = duration ~/ steps;
+      int currentStep = 0;
+
+      List<double> startSizes = List.from(_sizes);
+
+      Timer.periodic(interval, (Timer timer) {
+        currentStep++;
+
+        for (int i = 0; i < _sizes.length; i++) {
+          _sizes[i] =
+              _lerpDouble(startSizes[i], newSizes[i], currentStep / steps);
+        }
+
+        notifyListeners();
+
+        if (currentStep >= steps) {
+          animating = false;
+          timer.cancel();
+          _sizes = newSizes;
+          notifyListeners();
+        }
+      });
+    }
+  }
+
+  double _lerpDouble(double a, double b, double t) {
+    return a + (b - a) * t;
+  }
+
   void _adjustChildSize({
     required int index,
     required double delta,
   }) {
+    if (animating) {
+      return;
+    }
+
     final adjustedDelta = delta < 0
         ? _getAdjustedReducingDelta(index: index, delta: delta)
         : _getAdjustedIncreasingDelta(index: index, delta: delta);
 
     _sizes[index] += adjustedDelta;
     _sizes[index + 1] -= adjustedDelta;
+
     notifyListeners();
   }
 

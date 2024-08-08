@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_resizable_container/src/divider_painter.dart';
+import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:flutter_resizable_container/src/resizable_divider.dart';
 
 class ResizableContainerDivider extends StatefulWidget {
@@ -9,11 +9,15 @@ class ResizableContainerDivider extends StatefulWidget {
     required this.direction,
     required this.onResizeUpdate,
     required this.config,
+    required this.snappedChild,
+    required this.snapPosition,
   });
 
   final Axis direction;
   final void Function(double) onResizeUpdate;
   final ResizableDivider config;
+  final Widget snappedChild;
+  final SnapPosition? snapPosition;
 
   @override
   State<ResizableContainerDivider> createState() =>
@@ -26,6 +30,8 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
 
   @override
   Widget build(BuildContext context) {
+    final snapped = widget.snapPosition != null;
+
     final width = _getWidth();
     final height = _getHeight();
 
@@ -40,23 +46,50 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
         onHorizontalDragStart: _onHorizontalDragStart,
         onHorizontalDragUpdate: _onHorizontalDragUpdate,
         onHorizontalDragEnd: _onHorizontalDragEnd,
-        child: SizedBox(
+        child: Container(
           height: height,
-          width: width,
+          width: snapped ? 34 : width,
+          color: widget.config.backgroundColor,
+          // color: Colors.green,
           child: Center(
-            child: CustomPaint(
-              size: Size(width, height),
-              painter: DividerPainter(
-                direction: widget.direction,
-                color: widget.config.color ?? Theme.of(context).dividerColor,
-                thickness: widget.config.thickness,
-                indent: widget.config.indent,
-                endIndent: widget.config.endIndent,
+            child: AnimatedContainer(
+              height: 68,
+              duration: const Duration(milliseconds: 200),
+              width: snapped ? 34 : widget.config.thickness,
+              decoration: BoxDecoration(
+                color: widget.config.color,
+                borderRadius: _getBorderRadius(),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 4,
+                    spreadRadius: 2,
+                  ),
+                ],
               ),
+              child: snapped ? widget.snappedChild : null,
             ),
           ),
         ),
       ),
+    );
+  }
+
+  BorderRadiusGeometry _getBorderRadius() {
+    if (widget.snapPosition == null) {
+      return BorderRadius.circular(widget.config.thickness / 2);
+    }
+
+    if (widget.snapPosition == SnapPosition.end) {
+      return const BorderRadius.only(
+        topLeft: Radius.circular(8),
+        bottomLeft: Radius.circular(8),
+      );
+    }
+
+    return const BorderRadius.only(
+      topRight: Radius.circular(8),
+      bottomRight: Radius.circular(8),
     );
   }
 
@@ -68,15 +101,12 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
   }
 
   double _getHeight() {
-    return switch (widget.direction) {
-      Axis.horizontal => double.infinity,
-      Axis.vertical => widget.config.size,
-    };
+    return widget.config.height;
   }
 
   double _getWidth() {
     return switch (widget.direction) {
-      Axis.horizontal => widget.config.size,
+      Axis.horizontal => widget.config.thickness,
       Axis.vertical => double.infinity,
     };
   }
