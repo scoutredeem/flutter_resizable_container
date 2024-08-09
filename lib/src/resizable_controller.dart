@@ -191,6 +191,10 @@ class ResizableController with ChangeNotifier {
     _initializeChildSizes(_availableSpace);
   }
 
+  void updateCurrentChildren() {
+    _initializeChildSizes(_availableSpace);
+  }
+
   void _initializeChildSizes(double availableSpace) {
     _sizes = _getInitialChildSizes(availableSpace);
   }

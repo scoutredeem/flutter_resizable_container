@@ -105,6 +105,7 @@ class _ResizableContainerState extends State<ResizableContainer> {
                         builder: (context) {
                           final isFirst = i == 0;
                           final isLast = i == widget.children.length - 1;
+
                           final height = _getChildSize(
                             index: i,
                             direction: Axis.vertical,
@@ -122,8 +123,8 @@ class _ResizableContainerState extends State<ResizableContainer> {
                               left: isFirst ? 0 : 2,
                               right: isLast ? 0 : 2,
                             ),
-                            height: height,
-                            width: width,
+                            height: height < 0 ? 0 : height,
+                            width: width < 0 ? 0 : width,
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(8),
                               child: widget.children[i].child,
