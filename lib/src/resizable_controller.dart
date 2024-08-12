@@ -7,6 +7,7 @@ import "package:flutter_resizable_container/flutter_resizable_container.dart";
 import "package:flutter_resizable_container/src/extensions/iterable_ext.dart";
 import "package:flutter_resizable_container/src/resizable_size.dart";
 
+// ignore: prefer-match-file-name
 enum SnapPosition { start, end }
 
 /// A controller to provide a programmatic interface to a [ResizableContainer].
@@ -113,7 +114,7 @@ class ResizableController with ChangeNotifier {
       final interval = duration ~/ steps;
       int currentStep = 0;
 
-      List<double> startSizes = List.from(_sizes);
+      List<double> startSizes = List.of(_sizes);
 
       Timer.periodic(interval, (Timer timer) {
         currentStep++;
@@ -151,7 +152,7 @@ class ResizableController with ChangeNotifier {
         ? _getAdjustedReducingDelta(index: index, delta: delta)
         : _getAdjustedIncreasingDelta(index: index, delta: delta);
 
-    final previousSizes = List<double>.from(_sizes);
+    final previousSizes = List.of(_sizes);
 
     _sizes[index] += adjustedDelta;
     _sizes[index + 1] -= adjustedDelta;

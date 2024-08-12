@@ -1,3 +1,4 @@
+// ignore: prefer-match-file-name
 enum SizeType {
   ratio,
   pixels,

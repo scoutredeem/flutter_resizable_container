@@ -55,7 +55,7 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
           child: Center(
             child: AnimatedContainer(
               height: 68,
-              duration: const Duration(milliseconds: 200),
+              duration: widget.config.snapDuration,
               width: snapped ? 34 : 10,
               decoration: BoxDecoration(
                 color: snapped

@@ -181,8 +181,6 @@ class _ResizableContainerState extends State<ResizableContainer> {
     required Axis direction,
     required BoxConstraints constraints,
   }) {
-    return direction != direction
-        ? constraints.maxForDirection(direction)
-        : controller.sizes[index];
+    return controller.sizes[index];
   }
 }
