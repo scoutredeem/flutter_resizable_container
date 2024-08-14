@@ -11,7 +11,8 @@ class ResizableDivider {
     this.onHoverExit,
     this.backgroundColor = Colors.transparent,
     this.peekSize = 16.0,
-    this.snappedBackgroundColor = Colors.transparent,
+    this.leftSnappedBackgroundColor = Colors.transparent,
+    this.rightSnappedBackgroundColor = Colors.transparent,
     this.snapDuration = const Duration(milliseconds: 200),
   })  : assert(height >= thickness, '[size] must be >= [thickness].'),
         assert(thickness > 0, '[thickness] must be > 0.');
@@ -56,8 +57,11 @@ class ResizableDivider {
   /// The peek size of the child,
   final double peekSize;
 
-  /// Snapped background color
-  final Color snappedBackgroundColor;
+  /// Snapped background color for left snap
+  final Color leftSnappedBackgroundColor;
+
+  /// Snapped background color for right snap
+  final Color rightSnappedBackgroundColor;
 
   /// Snap animation duration
   final Duration snapDuration;

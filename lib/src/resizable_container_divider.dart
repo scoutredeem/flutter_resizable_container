@@ -8,17 +8,19 @@ class ResizableContainerDivider extends StatefulWidget {
     required this.direction,
     required this.onResizeUpdate,
     required this.config,
-    required this.snappedChild,
     required this.snapPosition,
     required this.onTap,
+    required this.snappedLeftDividerIcon,
+    required this.snappedRightDividerIcon,
   });
 
   final Axis direction;
   final void Function(double) onResizeUpdate;
   final ResizableDivider config;
-  final Widget snappedChild;
   final SnapPosition? snapPosition;
   final VoidCallback? onTap;
+  final Widget snappedLeftDividerIcon;
+  final Widget snappedRightDividerIcon;
 
   @override
   State<ResizableContainerDivider> createState() =>
@@ -59,7 +61,9 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
               width: snapped ? 34 : 10,
               decoration: BoxDecoration(
                 color: snapped
-                    ? widget.config.snappedBackgroundColor
+                    ? widget.snapPosition == SnapPosition.end
+                        ? widget.config.leftSnappedBackgroundColor
+                        : widget.config.rightSnappedBackgroundColor
                     : widget.config.color,
                 borderRadius: _getBorderRadius(),
                 boxShadow: [
@@ -70,7 +74,11 @@ class _ResizableContainerDividerState extends State<ResizableContainerDivider> {
                   ),
                 ],
               ),
-              child: snapped ? widget.snappedChild : null,
+              child: snapped
+                  ? widget.snapPosition == SnapPosition.end
+                      ? widget.snappedRightDividerIcon
+                      : widget.snappedLeftDividerIcon
+                  : const SizedBox.shrink(),
             ),
           ),
         ),

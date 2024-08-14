@@ -11,10 +11,14 @@ void main() {
 
       await tester.binding.setSurfaceSize(const Size(1000, 1000));
 
+      const halfGap = 2.0;
+
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: ResizableContainer(
+              snappedLeftDividerIcon: const SizedBox(),
+              snappedRightDividerIcon: const SizedBox(),
               controller: controller,
               direction: Axis.horizontal,
               divider: const ResizableDivider(
@@ -53,8 +57,8 @@ void main() {
       final boxASize = tester.getSize(find.byKey(const Key('BoxA')));
       final boxBSize = tester.getSize(find.byKey(const Key('BoxB')));
 
-      expect(boxASize.width, equals(controller.sizes.first));
-      expect(boxBSize.width, equals(controller.sizes.last));
+      expect(boxASize.width, equals(controller.sizes.first - halfGap));
+      expect(boxBSize.width, equals(controller.sizes.last - halfGap));
     });
 
     testWidgets('can resize using the controller', (tester) async {
@@ -67,6 +71,8 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: ResizableContainer(
+              snappedLeftDividerIcon: const SizedBox(),
+              snappedRightDividerIcon: const SizedBox(),
               controller: controller,
               direction: Axis.horizontal,
               divider: const ResizableDivider(
@@ -114,6 +120,9 @@ void main() {
         const MaterialApp(
           home: Scaffold(
             body: ResizableContainer(
+              snappedLeftDividerIcon: SizedBox(),
+              snappedRightDividerIcon: SizedBox(),
+              divider: ResizableDivider(height: 2),
               direction: Axis.horizontal,
               children: [
                 ResizableChild(
@@ -146,6 +155,8 @@ void main() {
         const MaterialApp(
           home: Scaffold(
             body: ResizableContainer(
+              snappedLeftDividerIcon: SizedBox(),
+              snappedRightDividerIcon: SizedBox(),
               divider: ResizableDivider(
                 height: dividerWidth,
               ),
@@ -188,6 +199,8 @@ void main() {
         const MaterialApp(
           home: Scaffold(
             body: ResizableContainer(
+              snappedLeftDividerIcon: SizedBox(),
+              snappedRightDividerIcon: SizedBox(),
               divider: ResizableDivider(
                 height: dividerWidth,
               ),
@@ -252,6 +265,7 @@ void main() {
   });
 }
 
+// ignore: prefer-match-file-name
 class _ToggleChildApp extends StatefulWidget {
   const _ToggleChildApp();
 
@@ -276,6 +290,11 @@ class __ToggleChildAppState extends State<_ToggleChildApp> {
           ],
         ),
         body: ResizableContainer(
+          snappedLeftDividerIcon: const SizedBox(),
+          snappedRightDividerIcon: const SizedBox(),
+          divider: const ResizableDivider(
+            height: 2,
+          ),
           direction: Axis.horizontal,
           children: [
             const ResizableChild(

@@ -35,6 +35,7 @@ void main() {
       group('equality', () {
         test('returns true for equal objects', () {
           expect(
+            // ignore: avoid-self-compare
             const ResizableSize.pixels(1) == const ResizableSize.pixels(1),
             isTrue,
           );
