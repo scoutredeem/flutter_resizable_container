@@ -51,6 +51,8 @@ void main() {
           MaterialApp(
             home: Scaffold(
               body: ResizableContainer(
+                snappedLeftDividerIcon: const SizedBox(),
+                snappedRightDividerIcon: const SizedBox(),
                 controller: ResizableController(),
                 direction: Axis.horizontal,
                 divider: ResizableDivider(
@@ -96,6 +98,8 @@ void main() {
           MaterialApp(
             home: Scaffold(
               body: ResizableContainer(
+                snappedLeftDividerIcon: const SizedBox(),
+                snappedRightDividerIcon: const SizedBox(),
                 controller: ResizableController(),
                 direction: Axis.horizontal,
                 divider: ResizableDivider(

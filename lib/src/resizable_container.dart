@@ -19,8 +19,8 @@ class ResizableContainer extends StatefulWidget {
     required this.children,
     required this.direction,
     required this.divider,
-    required this.snappedDivider,
-    this.snapPosition,
+    required this.snappedLeftDividerIcon,
+    required this.snappedRightDividerIcon,
     this.controller,
     this.onTap,
   });
@@ -38,11 +38,11 @@ class ResizableContainer extends StatefulWidget {
   /// Configuration values for the dividing space/line between this container's [children].
   final ResizableDivider divider;
 
-  /// Child used for divider when the children size is snapped
-  final Widget snappedDivider;
+  /// The [Widget] that will be displayed when the divider is snapped to Left.
+  final Widget snappedLeftDividerIcon;
 
-  /// Indicates which direction the children is snapped
-  final SnapPosition? snapPosition;
+  /// The [Widget] that will be displayed when the divider is snapped to Right.
+  final Widget snappedRightDividerIcon;
 
   final VoidCallback? onTap;
 
@@ -54,6 +54,8 @@ class _ResizableContainerState extends State<ResizableContainer> {
   late final controller = widget.controller ?? ResizableController();
   late final isDefaultController = widget.controller == null;
   late final manager = ResizableControllerManager(controller);
+
+  final childrenGap = 2.0;
 
   @override
   void initState() {
@@ -95,48 +97,65 @@ class _ResizableContainerState extends State<ResizableContainer> {
             return Stack(
               fit: StackFit.expand,
               children: [
-                Flex(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  direction: widget.direction,
-                  children: [
-                    for (var i = 0; i < widget.children.length; i++) ...[
-                      // build the child
-                      Builder(
-                        builder: (context) {
-                          final isFirst = i == 0;
-                          final isLast = i == widget.children.length - 1;
-
-                          final height = _getChildSize(
-                            index: i,
-                            direction: Axis.vertical,
-                            constraints: constraints,
-                          );
-
-                          final width = _getChildSize(
-                            index: i,
-                            direction: Axis.horizontal,
-                            constraints: constraints,
-                          );
-
-                          return Container(
-                            padding: EdgeInsets.only(
-                              left: isFirst ? 0 : 2,
-                              right: isLast ? 0 : 2,
-                            ),
-                            height: height < 0 ? 0 : height,
-                            width: width < 0 ? 0 : width,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: widget.children[i].child,
-                            ),
-                          );
-                        },
+                Builder(
+                  builder: (context) {
+                    return AnimatedPositioned(
+                      duration: controller.animating
+                          ? controller.animationDuration
+                          : Duration.zero,
+                      left: _getLeftPosition(controller.snapPosition),
+                      child: AnimatedContainer(
+                        duration: controller.animating
+                            ? controller.animationDuration
+                            : Duration.zero,
+                        padding: EdgeInsets.only(right: childrenGap),
+                        height: widget.divider.height,
+                        width:
+                            _getWidthLeft(controller.snapPosition, constraints),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: widget.children[0].child,
+                        ),
                       ),
-                    ],
-                  ],
+                    );
+                  },
                 ),
-                Positioned(
-                  left: _getDividerPosition(),
+                Builder(
+                  builder: (context) {
+                    return AnimatedPositioned(
+                      duration: controller.animating
+                          ? controller.animationDuration
+                          : Duration.zero,
+                      right: _getRightPosition(
+                        controller.snapPosition,
+                        constraints,
+                      ),
+                      child: AnimatedContainer(
+                        duration: controller.animating
+                            ? controller.animationDuration
+                            : Duration.zero,
+                        padding: EdgeInsets.only(left: childrenGap),
+                        height: widget.divider.height,
+                        width: _getWidthRight(
+                          controller.snapPosition,
+                          constraints,
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: widget.children[1].child,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                AnimatedPositioned(
+                  duration: controller.animating
+                      ? controller.animationDuration
+                      : Duration.zero,
+                  left: _getDividerPosition(
+                    controller.snapPosition,
+                    constraints,
+                  ),
                   child: ResizableContainerDivider(
                     config: widget.divider,
                     direction: widget.direction,
@@ -144,8 +163,9 @@ class _ResizableContainerState extends State<ResizableContainer> {
                       index: 0,
                       delta: delta,
                     ),
-                    snappedChild: widget.snappedDivider,
-                    snapPosition: widget.snapPosition,
+                    snappedLeftDividerIcon: widget.snappedLeftDividerIcon,
+                    snappedRightDividerIcon: widget.snappedRightDividerIcon,
+                    snapPosition: controller.snapPosition,
                     onTap: widget.onTap,
                   ),
                 ),
@@ -157,15 +177,20 @@ class _ResizableContainerState extends State<ResizableContainer> {
     );
   }
 
-  double? _getDividerPosition() {
+  double? _getDividerPosition(
+      SnapPosition? snapPosition, BoxConstraints constraints) {
     final anchorPosition =
         controller.sizes.first - (widget.divider.thickness / 2);
-    if (widget.snapPosition == null) {
+    if (snapPosition == null) {
       return anchorPosition;
     }
 
-    if (widget.snapPosition == SnapPosition.start) {
-      return anchorPosition - 4;
+    if (snapPosition == SnapPosition.start) {
+      return 0;
+    }
+
+    if (snapPosition == SnapPosition.end) {
+      return constraints.maxWidth - 34;
     }
 
     return anchorPosition - 6;
@@ -182,5 +207,81 @@ class _ResizableContainerState extends State<ResizableContainer> {
     required BoxConstraints constraints,
   }) {
     return controller.sizes[index];
+  }
+
+  double _getLeftPosition(SnapPosition? snapPosition) {
+    if (snapPosition == SnapPosition.start) {
+      return -ResizableController.snapSize +
+          ResizableController.unSnapPoint +
+          childrenGap;
+    }
+
+    return 0;
+  }
+
+  double _getWidthLeft(SnapPosition? snapPosition, BoxConstraints constraints) {
+    final width = _getChildSize(
+      index: 0,
+      direction: Axis.horizontal,
+      constraints: constraints,
+    );
+
+    if (width < 0) {
+      return 0;
+    }
+
+    if (snapPosition == SnapPosition.start) {
+      return ResizableController.snapSize;
+    }
+
+    if (snapPosition == SnapPosition.end) {
+      return constraints.maxWidth -
+          ResizableController.unSnapPoint -
+          childrenGap;
+    }
+
+    return width;
+  }
+
+  double _getRightPosition(
+      SnapPosition? snapPosition, BoxConstraints constraints) {
+    if (snapPosition == SnapPosition.start) {
+      return 0;
+    }
+
+    if (snapPosition == SnapPosition.end) {
+      return -ResizableController.snapSize +
+          ResizableController.unSnapPoint +
+          childrenGap;
+    }
+
+    return 0;
+  }
+
+  double _getWidthRight(
+    SnapPosition? snapPosition,
+    BoxConstraints constraints,
+  ) {
+    final width = _getChildSize(
+      index: 1,
+      direction: Axis.horizontal,
+      constraints: constraints,
+    );
+
+    if (width < 0) {
+      return 0;
+    }
+
+    if (snapPosition == SnapPosition.start) {
+      return constraints.maxWidth -
+          ResizableController.unSnapPoint -
+          childrenGap;
+    }
+
+    if (snapPosition == SnapPosition.end) {
+      return ResizableController.snapSize;
+    }
+
+    return width;
   }
 }

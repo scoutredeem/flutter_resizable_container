@@ -12,9 +12,19 @@ enum SnapPosition { start, end }
 
 /// A controller to provide a programmatic interface to a [ResizableContainer].
 class ResizableController with ChangeNotifier {
+  final Duration animationDuration;
+  ResizableController({
+    this.animationDuration = const Duration(milliseconds: 200),
+  });
+
+  static const snapSize = 377.0;
+  static const unSnapPoint = 16.0;
+
   double _availableSpace = -1;
   List<double> _sizes = [];
   List<ResizableChild> _children = const [];
+
+  SnapPosition? snapPosition;
 
   /// The size, in pixels, of each child.
   UnmodifiableListView<double> get sizes => UnmodifiableListView(_sizes);
@@ -87,57 +97,13 @@ class ResizableController with ChangeNotifier {
   }
 
   bool animating = false;
-  void animateSizes(
-    List<ResizableSize> values, {
-    Duration duration = const Duration(milliseconds: 300),
-    required bool snap,
-  }) {
-    if (animating) {
-      return;
-    }
 
-    if (values.length != _children.length) {
-      throw ArgumentError('Must contain a value for every child');
-    }
-
-    final newSizes = _mapSizesToAvailableSpace(
-      resizableSizes: values,
-      availableSpace: _availableSpace,
+  void resetSnap() {
+    if (snapPosition == null) return;
+    _adjustChildSize(
+      index: 0,
+      delta: snapPosition == SnapPosition.start ? unSnapPoint : -unSnapPoint,
     );
-
-    if (duration == Duration.zero) {
-      _sizes = newSizes;
-      notifyListeners();
-    } else {
-      animating = true;
-      const int steps = 60; // Aiming for 60 FPS
-      final interval = duration ~/ steps;
-      int currentStep = 0;
-
-      List<double> startSizes = List.of(_sizes);
-
-      Timer.periodic(interval, (Timer timer) {
-        currentStep++;
-
-        for (int i = 0; i < _sizes.length; i++) {
-          _sizes[i] =
-              _lerpDouble(startSizes[i], newSizes[i], currentStep / steps);
-        }
-
-        notifyListeners();
-
-        if (currentStep >= steps) {
-          animating = false;
-          timer.cancel();
-          _sizes = newSizes;
-          notifyListeners();
-        }
-      });
-    }
-  }
-
-  double _lerpDouble(double a, double b, double t) {
-    return a + (b - a) * t;
   }
 
   void _adjustChildSize({
@@ -145,6 +111,14 @@ class ResizableController with ChangeNotifier {
     required double delta,
   }) {
     if (animating) {
+      return;
+    }
+
+    if (delta > 0 && snapPosition == SnapPosition.end) {
+      return;
+    }
+
+    if (delta < 0 && snapPosition == SnapPosition.start) {
       return;
     }
 
@@ -159,6 +133,74 @@ class ResizableController with ChangeNotifier {
 
     if (_sizes.any((s) => s < 16)) {
       _sizes = previousSizes;
+    }
+
+    notifyListeners();
+
+    _handleSnap(delta);
+    _handleUnsnap(delta);
+  }
+
+  void _handleSnap(double delta) {
+    if (snapPosition != null) {
+      return;
+    }
+    final isDirectionLeft = delta < 0;
+
+    if (_sizes[0] < snapSize && isDirectionLeft) {
+      if (snapPosition == SnapPosition.start) {
+        return;
+      }
+
+      snapPosition = SnapPosition.start;
+      _setAnimating();
+    }
+
+    if (_sizes[1] < snapSize && !isDirectionLeft) {
+      if (snapPosition == SnapPosition.end) {
+        return;
+      }
+
+      snapPosition = SnapPosition.end;
+      _setAnimating();
+    }
+
+    if (_sizes[0] >= snapSize &&
+        _sizes[1] >= snapSize &&
+        snapPosition != null) {
+      snapPosition = null;
+      _setAnimating();
+    }
+
+    notifyListeners();
+  }
+
+  void _setAnimating() {
+    animating = true;
+    notifyListeners();
+    Future.delayed(animationDuration, () {
+      animating = false;
+      notifyListeners();
+    });
+  }
+
+  void _handleUnsnap(double delta) {
+    if (snapPosition == null) {
+      return;
+    }
+
+    final isDirectionLeft = delta < 0;
+
+    if (snapPosition == SnapPosition.start && !isDirectionLeft) {
+      if (_sizes[0] > snapSize + 5) {
+        snapPosition = null;
+        _setAnimating();
+      }
+    } else if (snapPosition == SnapPosition.end && isDirectionLeft) {
+      if (_sizes[1] > snapSize + 5) {
+        snapPosition = null;
+        _setAnimating();
+      }
     }
 
     notifyListeners();
